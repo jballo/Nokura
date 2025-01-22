@@ -1,14 +1,9 @@
-import Image from "next/image";
+"use server";
 
-export default function Home() {
+import Dashboard from "@/components/custom/Dashboard";
+
+export default async function Home() {
   return (
-    <div>
-      <div>
-        <h1 className="text-3xl">Nokura</h1>
-      </div>
-      <div>
-        <p>Welcome!</p>
-      </div>
-    </div>
+    <Dashboard />
   );
 }
