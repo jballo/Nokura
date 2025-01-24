@@ -17,17 +17,41 @@ interface UserProps {
     ) => Promise<{ success: boolean; response?: boolean; error?: string; }>;
 }
 
+interface VideoProps {
+    uploadVideoMetaData: (
+        vid_name: string,
+        vid_id: string,
+        vid_uploader_id: string,
+        vid_url: string,
+        clerk_token: string
+    ) => Promise<{ success: boolean; response?: boolean; error?: string; }>;
+}
+
 interface DashboardProps {
     createUser: UserProps["createUser"];
     userExists: UserProps["userExists"];
+    uploadVideoMetaData: VideoProps["uploadVideoMetaData"];
 }
 
-export default function Dashboard({ createUser, userExists }: DashboardProps){
+export default function Dashboard({ createUser, userExists, uploadVideoMetaData }: DashboardProps){
     const { isSignedIn, user } = useUser();
     const { getToken } = useAuth();
     const [email, setEmail] = useState<string>("");
     
-    
+    const save_video_metadata = async (vid_name: string, vid_id: string, vid_uploader_id: string, vid_url: string) => {
+        console.log("Client side 'save_video_metadata' function.");
+        console.log("Vid name: ", vid_name);
+        console.log("Vid id: ", vid_id);
+        console.log("Vid uploader id: ", vid_uploader_id);
+        console.log("Vid url: ", vid_url);
+
+        try {
+            const clerkToken = await getToken({ template: "supabase" });
+            const response = await uploadVideoMetaData(vid_name, vid_id, vid_uploader_id, vid_url, clerkToken || "");
+        } catch (err) {
+            console.error("Error saving video metadata in db.");
+        }
+    }
     
     useEffect( () => {
 
@@ -63,10 +87,22 @@ export default function Dashboard({ createUser, userExists }: DashboardProps){
         </SignedOut>
         <UploadButton
             endpoint="imageUploader"
-            onClientUploadComplete={(res) => {
+            onClientUploadComplete={async (res) => {
                 // Do something with the response
-                console.log("Files: ", res);
+                // console.log("Files: ", res);
+                console.log("Res data: ", res[0]);
+                // console.log("Video name: ", res[0].name);
+                const vid_name = res[0].name;
+                // console.log("Video id: ", res[0].key);
+                const vid_id = res[0].key;
+                // console.log("Video user_id: ", res[0].serverData.uploadedBy);
+                const vid_uploader_id = res[0].serverData.uploadedBy;
+                // console.log("Video url: ", res[0].url);
+                const vid_url = res[0].url;
                 alert("Upload Completed");
+
+
+                await save_video_metadata(vid_name, vid_id, vid_uploader_id, vid_url);
             }}
             onUploadError={(error: Error) => {
                 // Do something with the error.
