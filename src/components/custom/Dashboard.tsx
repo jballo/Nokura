@@ -3,6 +3,7 @@
 import { SignedIn, SignedOut, SignInButton, SignOutButton, useAuth, useUser } from "@clerk/nextjs";
 import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
+import { UploadButton } from "./uploadthing";
 
 interface UserProps {
     createUser: (
@@ -60,5 +61,17 @@ export default function Dashboard({ createUser, userExists }: DashboardProps){
                 <Button>Sign In</Button>
             </SignInButton>
         </SignedOut>
+        <UploadButton
+            endpoint="imageUploader"
+            onClientUploadComplete={(res) => {
+                // Do something with the response
+                console.log("Files: ", res);
+                alert("Upload Completed");
+            }}
+            onUploadError={(error: Error) => {
+                // Do something with the error.
+                alert(`ERROR! ${error.message}`);
+            }}
+        />
     </div>);
 }
