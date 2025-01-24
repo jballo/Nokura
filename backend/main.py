@@ -77,7 +77,6 @@ def add_user_to_db():
             )
         )
         
-
         response = (
             supabase.table("users")
             .insert({ "email": email })
@@ -91,7 +90,7 @@ def add_user_to_db():
         response_body = {
             "status": "success",
             "code": 200,
-            "content": "User successfully been added to db."
+            "content": "Vid metadata successfully added to db."
         }
 
         return make_response(jsonify(response_body), 200)
@@ -174,8 +173,64 @@ def user_exists():
         }), 500)
 
 
-    # Get user info from request
-    user_id = request.args.get('user_id')
+@app.route("/upload-vid-metadata", methods=["POST"])
+def upload_vid_metadata():
+    # Verify the request is authenticated
+    header_api_key = request.headers.get('X-API-Key')
+    auth_check = verify_auth_header(header_api_key)
+    if auth_check != None:
+        return auth_check
+    
+    # Verify Clerk JWT
+    # token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else None
+
+
+    # Get vid metadata from request
+    vid_id = request.args.get('vid_id')
+    vid_name = request.args.get('vid_name')
+    vid_url = request.args.get('vid_url')
+    vid_uploader_id = request.args.get('vid_uploader_id')
+
+    try:
+        
+        supabase = create_client(
+            supabase_url=url,
+            supabase_key=key,
+            options=ClientOptions(
+                headers={
+                    "Authorization": f"Bearer {token}"
+                },
+                postgrest_client_timeout=10,
+                schema="public",
+            )
+        )
+
+        response = (
+            supabase.table("vids")
+            .insert({ "vid_id": vid_id, "vid_name": vid_name, "vid_url": vid_url, "vid_uploader_id": vid_uploader_id })
+            .execute()
+        )
+        # Output the result
+        if response.data:
+            print('Inserted:', response.data)
+
+        response_body = {
+            "status": "success",
+            "code": 200,
+            "content": "Vid metadata successfully added to db."
+        }
+
+        return make_response(jsonify(response_body), 200)
+    except Exception as err:
+        # Improved error logging
+        print(f"Supabase Error: {str(err)}")
+        return make_response(jsonify({
+            "status": "failure",
+            "code": 500,
+            "error": str(err)  # <- SAFER ERROR HANDLING
+        }), 500)
 
 if __name__ == '__main__':
     app.run()
