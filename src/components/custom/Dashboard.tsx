@@ -4,6 +4,7 @@ import { SignedIn, SignedOut, SignInButton, SignOutButton, useAuth, useUser } fr
 import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
 import { UploadButton } from "./uploadthing";
+import MediaThemeInstaplay from "player.style/instaplay/react";
 
 interface UserProps {
     createUser: (
@@ -37,6 +38,7 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData 
     const { isSignedIn, user } = useUser();
     const { getToken } = useAuth();
     const [email, setEmail] = useState<string>("");
+    const [vidSrc, setVidSrc] = useState<string>("");
     
     const save_video_metadata = async (vid_name: string, vid_id: string, vid_uploader_id: string, vid_url: string) => {
         console.log("Client side 'save_video_metadata' function.");
@@ -48,6 +50,8 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData 
         try {
             const clerkToken = await getToken({ template: "supabase" });
             const response = await uploadVideoMetaData(vid_name, vid_id, vid_uploader_id, vid_url, clerkToken || "");
+            setVidSrc(vid_url);
+            console.log("vidSrc: ", vidSrc);
         } catch (err) {
             console.error("Error saving video metadata in db.");
         }
@@ -109,5 +113,51 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData 
                 alert(`ERROR! ${error.message}`);
             }}
         />
+
+
+        <div className="h-[90vh] overflow-y-scroll snap-y snap-mandatory rounded-lg bg-black">
+            {/* Section 1 */}
+            <section className="h-[90vh] flex justify-center items-start p-6 snap-start">
+                {/* <p className="text-gray-700">
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                </p> */}
+                {(vidSrc.length > 0) && (
+                    <video controls className="h-[75vh]">
+                        <source src={vidSrc} type="video/mp4" />
+                    </video>
+                )}
+            </section>
+
+            {/* Section 2 */}
+            <section className="h-[90vh] flex justify-center items-start p-6 snap-start">
+                {/* <p className="text-gray-700">
+                    Fugiat adipisci in sequi alias eum perferendis tempora placeat esse.
+                </p> */}
+                {(vidSrc.length > 0) && (
+                    <video controls className="h-[75vh]">
+                        <source src={vidSrc} type="video/mp4" />
+                    </video>
+                )}
+            </section>
+
+            {/* Section 3 */}
+            <section className="h-[90vh] flex justify-center items-start p-6 snap-start">
+                {/* <p className="text-gray-700">
+                    Ducimus possimus velit sunt commodi tempora placeat esse.
+                </p> */}
+                {(vidSrc.length > 0) && (
+                    <video controls className="h-[75vh]">
+                        <source src={vidSrc} type="video/mp4" />
+                    </video>
+                )}
+            </section>
+        </div>
+
+        {/* {(vidSrc.length > 0) && (
+            // <Video src={vidSrc} />
+                <video controls className="h-[70vh]">
+                    <source src={vidSrc} type="video/mp4" />
+                </video>
+        )} */}
     </div>);
 }
