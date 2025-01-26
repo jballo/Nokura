@@ -232,5 +232,58 @@ def upload_vid_metadata():
             "error": str(err)  # <- SAFER ERROR HANDLING
         }), 500)
 
+@app.route('/videos', methods=['GET'])
+def videos():
+    print("API: '/user-exists'")
+    #  Verify the request is authenticated
+    header_api_key = request.headers.get('X-API-Key')
+    auth_check = verify_auth_header(header_api_key)
+    if auth_check != None:
+        return auth_check
+    
+    # Get user info from request
+    user_id = request.args.get('user_id')
+
+    # Verify Clerk JWT
+    # token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else None
+
+    try:
+        print("")
+        supabase = create_client(
+            supabase_url=url,
+            supabase_key=key,
+            options=ClientOptions(
+                headers={
+                    "Authorization": f"Bearer {token}"
+                },
+                postgrest_client_timeout=10,
+                schema="public",
+            )
+        )
+
+        response = (
+            supabase.table("vids")
+            .select("*")
+            .execute()
+        )
+        print("Response data: ", response.data)
+
+        response_body = {
+            "status": "success",
+            "code": 200,
+            "content": response.data
+        }
+
+        return make_response(jsonify(response_body), 200)
+    except Exception as err:
+        print(f"Supabase Error: {str(err)}")
+        return make_response(jsonify({
+            "status": "failure",
+            "code": 500,
+            "error": str(err)
+        }), 500)
+
 if __name__ == '__main__':
     app.run()

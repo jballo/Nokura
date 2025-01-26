@@ -18,6 +18,14 @@ interface UserProps {
     ) => Promise<{ success: boolean; response?: boolean; error?: string; }>;
 }
 
+interface Video {
+    user_id: string,
+    vid_id: string,
+    vid_name: string,
+    vid_uploader_id: string,
+    vid_url: string
+}
+
 interface VideoProps {
     uploadVideoMetaData: (
         vid_name: string,
@@ -26,19 +34,24 @@ interface VideoProps {
         vid_url: string,
         clerk_token: string
     ) => Promise<{ success: boolean; response?: boolean; error?: string; }>;
+    getVideos: (
+        clerk_token: string
+    ) => Promise<{ success: boolean; response?: Video[]; error?: string; }>;
 }
 
 interface DashboardProps {
     createUser: UserProps["createUser"];
     userExists: UserProps["userExists"];
     uploadVideoMetaData: VideoProps["uploadVideoMetaData"];
+    getVideos: VideoProps["getVideos"];
 }
 
-export default function Dashboard({ createUser, userExists, uploadVideoMetaData }: DashboardProps){
+export default function Dashboard({ createUser, userExists, uploadVideoMetaData, getVideos }: DashboardProps){
     const { isSignedIn, user } = useUser();
     const { getToken } = useAuth();
     const [email, setEmail] = useState<string>("");
     const [vidSrc, setVidSrc] = useState<string>("");
+    const [videos, setVideos] = useState<Video[]>([]);
     
     const save_video_metadata = async (vid_name: string, vid_id: string, vid_uploader_id: string, vid_url: string) => {
         console.log("Client side 'save_video_metadata' function.");
@@ -70,7 +83,20 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData 
             }
         }
 
+        const retrieveUrls = async () => {
+            if (isSignedIn && user ){
+                const clerkToken = await getToken({ template: "supabase" });
+                const urls = await getVideos(clerkToken || "");
+
+                const url_list = urls.response;
+                console.log("Url list: ", url_list);
+                setVideos(url_list || []);
+
+            }
+        }
+
         storeUser();
+        retrieveUrls();
     }, [isSignedIn, user]);
 
 
@@ -115,42 +141,16 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData 
         />
 
 
-        <div className="h-[90vh] overflow-y-scroll snap-y snap-mandatory rounded-lg bg-black">
-            {/* Section 1 */}
-            <section className="h-[90vh] flex justify-center items-start p-6 snap-start">
-                {/* <p className="text-gray-700">
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                </p> */}
-                {(vidSrc.length > 0) && (
-                    <video controls className="h-[75vh]">
-                        <source src={vidSrc} type="video/mp4" />
-                    </video>
-                )}
-            </section>
-
-            {/* Section 2 */}
-            <section className="h-[90vh] flex justify-center items-start p-6 snap-start">
-                {/* <p className="text-gray-700">
-                    Fugiat adipisci in sequi alias eum perferendis tempora placeat esse.
-                </p> */}
-                {(vidSrc.length > 0) && (
-                    <video controls className="h-[75vh]">
-                        <source src={vidSrc} type="video/mp4" />
-                    </video>
-                )}
-            </section>
-
-            {/* Section 3 */}
-            <section className="h-[90vh] flex justify-center items-start p-6 snap-start">
-                {/* <p className="text-gray-700">
-                    Ducimus possimus velit sunt commodi tempora placeat esse.
-                </p> */}
-                {(vidSrc.length > 0) && (
-                    <video controls className="h-[75vh]">
-                        <source src={vidSrc} type="video/mp4" />
-                    </video>
-                )}
-            </section>
+        <div className="h-[80vh] overflow-y-scroll snap-y snap-mandatory rounded-lg bg-black">
+            {(videos.length > 0) && (
+                videos.map((vid: Video) => (
+                    <section key={vid.vid_id} className="h-full flex justify-center items-start p-2 snap-start">
+                        <video id={vid.vid_id} controls className="h-[75vh]">
+                            <source src={vid.vid_url} type="video/mp4" />
+                        </video>
+                    </section>
+                ))
+            )}
         </div>
 
         {/* {(vidSrc.length > 0) && (
