@@ -4,6 +4,7 @@ from flask import Flask, make_response, jsonify, request
 from flask_cors import CORS
 from supabase import create_client, Client
 from supabase.client import ClientOptions
+import requests
 
 
 # Load .env file
@@ -16,6 +17,7 @@ api_key = os.getenv('API_KEY')
 
 url: str = os.getenv("SUPABASE_URL")
 key: str = os.getenv("SUPABASE_KEY")
+uploadthing_token: str = os.getenv("UPLOADTHING_SECRET")
 # supabase: Client = create_client(url, key)
 
 
@@ -284,6 +286,90 @@ def videos():
             "code": 500,
             "error": str(err)
         }), 500)
+
+@app.route('/upload-video', methods=["POST"])
+def upload_video():
+    #  Verify the request is authenticated
+    header_api_key = request.headers.get('X-API-Key')
+    auth_check = verify_auth_header(header_api_key)
+    if auth_check != None:
+        return auth_check
+
+    if 'file' not in request.files:
+        return make_response(jsonify({
+            "status": "error",
+            "code": 400,
+            "content": "No file part"
+        }), 400)
+
+    vid = request.files['file']
+
+    print("img: ", vid)
+
+    url = "https://api.uploadthing.com/v7/prepareUpload"
+
+    headers = {
+        "Content-Type": "application/json",
+        "x-uploadthing-api-key": uploadthing_token,
+    }
+
+    # Read file data to ensure accurate size calculation
+    data = vid.read()  # Read file content into memory
+    file_size = len(data)  # Get size from actual data length
+    # Reset file pointer after reading
+    vid.seek(0)
+
+    video_name = vid.filename
+    video_size = file_size
+    video_content_type = vid.content_type
+
+    body = {
+        "fileName": video_name,
+        "fileSize": video_size,
+        "fileType": video_content_type
+    }
+
+    generate_signed_url_response = requests.post(url, headers=headers, json=(body))
+
+    print(generate_signed_url_response.json())
+
+    content = generate_signed_url_response.json()
+    # content_key = content["key"]
+    content_url = content["url"]
+    content_key = content["key"]
+    # Reset file pointer and read data
+    vid.seek(0)
+    file_data = vid.read()
+
+    # Prepare multipart/form-data payload
+    files = {
+        "file": (video_name, file_data, video_content_type)
+    }
+
+    # Upload to UploadThing's signed URL
+    upload_file_response = requests.put(
+        content_url,
+        files=files  # Automatically sets Content-Type with boundary
+    )
+    print("\n\n\n----------------------------\n\n\n")
+    print("upload_file_response: ", upload_file_response.json()) 
+    print("\n\n\n----------------------------\n\n\n")
+    
+    upload_file_response_json = upload_file_response.json()
+    video_url = upload_file_response_json["ufsUrl"]
+    video_info = {
+        "key": content_key,
+        "name": video_name,
+        "url": video_url
+    }
+
+    response_body = {
+        "status": "success",
+        "code": 200,
+        "content": video_info
+    }
+    return make_response(jsonify(response_body), 200)
+
 
 if __name__ == '__main__':
     app.run()

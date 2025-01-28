@@ -3,3 +3,4 @@ Flask-Cors==5.0.0
 gunicorn==23.0.0
 supabase==2.11.0
 python-dotenv==1.0.1
+requests==2.32.3

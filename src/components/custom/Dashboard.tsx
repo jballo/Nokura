@@ -4,7 +4,9 @@ import { SignedIn, SignedOut, SignInButton, SignOutButton, useAuth, useUser } fr
 import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
 import { UploadButton } from "./uploadthing";
-import MediaThemeInstaplay from "player.style/instaplay/react";
+// import MediaThemeInstaplay from "player.style/instaplay/react";
+import { FileUpload } from "../ui/file-upload";
+import uploadVideo from "@/app/actions/uploadVideo";
 
 interface UserProps {
     createUser: (
@@ -37,6 +39,9 @@ interface VideoProps {
     getVideos: (
         clerk_token: string
     ) => Promise<{ success: boolean; response?: Video[]; error?: string; }>;
+    uploadVideo: (
+        file: File
+    ) => Promise<{ success: boolean; response?: string; error?: string }>;
 }
 
 interface DashboardProps {
@@ -44,6 +49,7 @@ interface DashboardProps {
     userExists: UserProps["userExists"];
     uploadVideoMetaData: VideoProps["uploadVideoMetaData"];
     getVideos: VideoProps["getVideos"];
+    uploadVideo: VideoProps["uploadVideo"];
 }
 
 export default function Dashboard({ createUser, userExists, uploadVideoMetaData, getVideos }: DashboardProps){
@@ -52,6 +58,22 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
     const [email, setEmail] = useState<string>("");
     const [vidSrc, setVidSrc] = useState<string>("");
     const [videos, setVideos] = useState<Video[]>([]);
+    const [file, setFiles] = useState<File>();
+
+    const handleFileUpload = async (newFile: File) => {
+        console.log("newFile: ", newFile);
+
+
+        const formData = new FormData();
+        formData.append("image", newFile);
+        console.log("FormData 'image' (in Dashboard): ", formData.get("image"))
+
+        const upload_vid_resp = await uploadVideo(newFile);
+
+        console.log("upload_vid_resp: ", upload_vid_resp);
+
+        setFiles(newFile)
+    }
     
     const save_video_metadata = async (vid_name: string, vid_id: string, vid_uploader_id: string, vid_url: string) => {
         console.log("Client side 'save_video_metadata' function.");
@@ -140,7 +162,9 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
             }}
         />
 
-
+        <div className="">
+            <FileUpload onChange={handleFileUpload}/>
+        </div>
         <div className="h-[80vh] overflow-y-scroll snap-y snap-mandatory rounded-lg bg-black">
             {(videos.length > 0) && (
                 videos.map((vid: Video) => (
