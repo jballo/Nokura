@@ -60,20 +60,6 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
     const [videos, setVideos] = useState<Video[]>([]);
     const [file, setFiles] = useState<File>();
 
-    const handleFileUpload = async (newFile: File) => {
-        console.log("newFile: ", newFile);
-
-
-        const formData = new FormData();
-        formData.append("image", newFile);
-        console.log("FormData 'image' (in Dashboard): ", formData.get("image"))
-
-        const upload_vid_resp = await uploadVideo(newFile);
-
-        console.log("upload_vid_resp: ", upload_vid_resp);
-
-        setFiles(newFile)
-    }
     
     const save_video_metadata = async (vid_name: string, vid_id: string, vid_uploader_id: string, vid_url: string) => {
         console.log("Client side 'save_video_metadata' function.");
@@ -81,7 +67,7 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
         console.log("Vid id: ", vid_id);
         console.log("Vid uploader id: ", vid_uploader_id);
         console.log("Vid url: ", vid_url);
-
+        
         try {
             const clerkToken = await getToken({ template: "supabase" });
             const response = await uploadVideoMetaData(vid_name, vid_id, vid_uploader_id, vid_url, clerkToken || "");
@@ -90,6 +76,39 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
         } catch (err) {
             console.error("Error saving video metadata in db.");
         }
+    }
+
+    const handleFileUpload = async (newFile: File) => {
+        console.log("newFile: ", newFile);
+
+
+        const formData = new FormData();
+        formData.append("image", newFile);
+        console.log("FormData 'image' (in Dashboard): ", formData.get("image"))
+
+        if(!(isSignedIn && user)){
+            return
+        }
+
+        // const clerkToken = await getToken({ template: "supabase" });
+
+        const upload_vid_resp = await uploadVideo(newFile);
+
+        console.log("upload_vid_resp: ", upload_vid_resp);
+
+        console.log("type of upload_vid_resp: ", typeof(upload_vid_resp))
+
+        const result = upload_vid_resp.response;
+
+        const vid_name = result.name;
+        const vid_id = result.key;
+        const vid_url = result.url;
+        setVidSrc(vid_url);
+
+
+        await save_video_metadata(vid_name, vid_id, user.id, vid_url);
+
+        setFiles(newFile)
     }
     
     useEffect( () => {
