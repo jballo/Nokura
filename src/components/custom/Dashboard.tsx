@@ -156,30 +156,6 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
                 <Button>Sign In</Button>
             </SignInButton>
         </SignedOut>
-        <UploadButton
-            endpoint="imageUploader"
-            onClientUploadComplete={async (res) => {
-                // Do something with the response
-                // console.log("Files: ", res);
-                console.log("Res data: ", res[0]);
-                // console.log("Video name: ", res[0].name);
-                const vid_name = res[0].name;
-                // console.log("Video id: ", res[0].key);
-                const vid_id = res[0].key;
-                // console.log("Video user_id: ", res[0].serverData.uploadedBy);
-                const vid_uploader_id = res[0].serverData.uploadedBy;
-                // console.log("Video url: ", res[0].url);
-                const vid_url = res[0].url;
-                alert("Upload Completed");
-
-
-                await save_video_metadata(vid_name, vid_id, vid_uploader_id, vid_url);
-            }}
-            onUploadError={(error: Error) => {
-                // Do something with the error.
-                alert(`ERROR! ${error.message}`);
-            }}
-        />
 
         <div className="">
             <FileUpload onChange={handleFileUpload}/>

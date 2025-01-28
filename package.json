@@ -12,7 +12,6 @@
     "@clerk/nextjs": "^6.10.0",
     "@radix-ui/react-slot": "^1.1.1",
     "@tabler/icons-react": "^3.29.0",
-    "@uploadthing/react": "^7.1.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.0.5",
@@ -23,8 +22,7 @@
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss-animate": "^1.0.7",
-    "uploadthing": "^7.4.4"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
