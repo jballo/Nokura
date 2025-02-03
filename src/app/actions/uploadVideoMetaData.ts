@@ -1,7 +1,7 @@
 "use server";
 
 
-export default async function uploadVideoMetaData(vid_name: string, vid_id: string, vid_uploader_id: string, vid_url: string, clerk_token: string) {
+export default async function uploadVideoMetaData(vid_name: string, vid_id: string, vid_uploader_id: string, vid_url: string, embedding: string, clerk_token: string) {
     console.log("Logging in action...");
     console.log("Client side 'save_video_metadata' function.");
     console.log("Vid name: ", vid_name);
@@ -18,7 +18,7 @@ export default async function uploadVideoMetaData(vid_name: string, vid_id: stri
                 "X-API-SECRET": process.env.API_SECRET || "",
                 "Authorization": `Bearer ${clerk_token}`
             },
-            body: JSON.stringify({ vid_name, vid_id, vid_uploader_id, vid_url })
+            body: JSON.stringify({ vid_name, vid_id, vid_uploader_id, vid_url, embedding })
         });
 
         if(!response.ok) {

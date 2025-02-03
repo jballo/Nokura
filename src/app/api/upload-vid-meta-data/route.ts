@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request){
     const body = await request.json();
-    const { vid_name, vid_id, vid_uploader_id, vid_url } = body;
+    const { vid_name, vid_id, vid_uploader_id, vid_url, embedding } = body;
+    console.log("Embedding in route: ", embedding);
 
     const apiSecret = request.headers.get("X-API-SECRET");
     const clerkToken = request.headers.get("Authorization") || "";
@@ -19,6 +20,7 @@ export async function POST(request: Request){
         url_endpoint.searchParams.set("vid_id", vid_id);
         url_endpoint.searchParams.set("vid_uploader_id", vid_uploader_id);
         url_endpoint.searchParams.set("vid_url", vid_url);
+        url_endpoint.searchParams.set("embedding", embedding);
 
         const upload_vid_metatadata_response = await fetch(url_endpoint.toString(), {
             method: "POST",

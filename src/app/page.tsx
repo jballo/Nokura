@@ -6,9 +6,10 @@ import { userExists } from "./actions/userExists";
 import uploadVideoMetaData from "./actions/uploadVideoMetaData";
 import getVideos from "./actions/getVideos";
 import uploadVideo from "./actions/uploadVideo";
+import createVideoEmbedding from "./actions/createVideoEmbedding";
 
 export default async function Home() {
   return (
-    <Dashboard createUser={createUser} userExists={userExists} uploadVideoMetaData={uploadVideoMetaData} getVideos={getVideos} uploadVideo={uploadVideo}/>
+    <Dashboard createUser={createUser} userExists={userExists} uploadVideoMetaData={uploadVideoMetaData} getVideos={getVideos} uploadVideo={uploadVideo} createVideoEmbedding={createVideoEmbedding}/>
   );
 }

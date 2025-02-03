@@ -7,14 +7,14 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
 
-    const file = formData.get("image");
+    const file = formData.get("video");
     if(!file){
         throw new Error(`No file`);
     }
     const flaskFormData = new FormData();
     flaskFormData.append("file", file);
 
-    console.log("formData image (in route): ", formData.get("image"));
+    console.log("formData video (in route): ", formData.get("video"));
 
     const apiSecret = request.headers.get("X-API-SECRET");
 

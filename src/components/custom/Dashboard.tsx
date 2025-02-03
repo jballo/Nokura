@@ -3,10 +3,7 @@
 import { SignedIn, SignedOut, SignInButton, SignOutButton, useAuth, useUser } from "@clerk/nextjs";
 import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
-import { UploadButton } from "./uploadthing";
-// import MediaThemeInstaplay from "player.style/instaplay/react";
 import { FileUpload } from "../ui/file-upload";
-import uploadVideo from "@/app/actions/uploadVideo";
 
 interface UserProps {
     createUser: (
@@ -28,20 +25,30 @@ interface Video {
     vid_url: string
 }
 
+interface UploadVidResponse {
+    key: string,
+    name: string,
+    url: string
+}
+
 interface VideoProps {
     uploadVideoMetaData: (
         vid_name: string,
         vid_id: string,
         vid_uploader_id: string,
         vid_url: string,
-        clerk_token: string
+        embedding: string,
+        clerk_token: string,
     ) => Promise<{ success: boolean; response?: boolean; error?: string; }>;
     getVideos: (
         clerk_token: string
     ) => Promise<{ success: boolean; response?: Video[]; error?: string; }>;
     uploadVideo: (
         file: File
-    ) => Promise<{ success: boolean; response?: string; error?: string }>;
+    ) => Promise<{ success: boolean; response?: UploadVidResponse; error?: string }>;
+    createVideoEmbedding: (
+        file: File
+    ) => Promise<{ success: boolean; response?: string; error?: string}>
 }
 
 interface DashboardProps {
@@ -50,9 +57,10 @@ interface DashboardProps {
     uploadVideoMetaData: VideoProps["uploadVideoMetaData"];
     getVideos: VideoProps["getVideos"];
     uploadVideo: VideoProps["uploadVideo"];
+    createVideoEmbedding: VideoProps["createVideoEmbedding"];
 }
 
-export default function Dashboard({ createUser, userExists, uploadVideoMetaData, getVideos }: DashboardProps){
+export default function Dashboard({ createUser, userExists, uploadVideoMetaData, getVideos, createVideoEmbedding, uploadVideo }: DashboardProps){
     const { isSignedIn, user } = useUser();
     const { getToken } = useAuth();
     const [email, setEmail] = useState<string>("");
@@ -61,7 +69,7 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
     const [file, setFiles] = useState<File>();
 
     
-    const save_video_metadata = async (vid_name: string, vid_id: string, vid_uploader_id: string, vid_url: string) => {
+    const save_video_metadata = async (vid_name: string, vid_id: string, vid_uploader_id: string, vid_url: string, embedding: string) => {
         console.log("Client side 'save_video_metadata' function.");
         console.log("Vid name: ", vid_name);
         console.log("Vid id: ", vid_id);
@@ -70,7 +78,7 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
         
         try {
             const clerkToken = await getToken({ template: "supabase" });
-            const response = await uploadVideoMetaData(vid_name, vid_id, vid_uploader_id, vid_url, clerkToken || "");
+            const response = await uploadVideoMetaData(vid_name, vid_id, vid_uploader_id, vid_url, embedding, clerkToken || "");
             setVidSrc(vid_url);
             console.log("vidSrc: ", vidSrc);
         } catch (err) {
@@ -83,8 +91,8 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
 
 
         const formData = new FormData();
-        formData.append("image", newFile);
-        console.log("FormData 'image' (in Dashboard): ", formData.get("image"))
+        formData.append("video", newFile);
+        console.log("FormData 'video' (in Dashboard): ", formData.get("video"))
 
         if(!(isSignedIn && user)){
             return
@@ -98,6 +106,11 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
 
         console.log("type of upload_vid_resp: ", typeof(upload_vid_resp))
 
+        if (!upload_vid_resp.success || !upload_vid_resp.response) {
+            console.error("Failed to upload video");
+            return;
+        }
+
         const result = upload_vid_resp.response;
 
         const vid_name = result.name;
@@ -105,8 +118,18 @@ export default function Dashboard({ createUser, userExists, uploadVideoMetaData,
         const vid_url = result.url;
         setVidSrc(vid_url);
 
+        const video_embed_response = await createVideoEmbedding(newFile);
+        const video_embedding = video_embed_response.response ? JSON.stringify(video_embed_response.response[0]) : "";
+        console.log("video_embed_response: ", video_embed_response);
+        console.log("video_embed_response embedding", video_embedding)
+        // if (video_embed_response.response) {
+        //     console.log("video_embed_response embedding: ", video_embed_response.response[0]);
+        // } else {
+        //     console.error("video_embed_response.response is undefined");
+        // }
 
-        await save_video_metadata(vid_name, vid_id, user.id, vid_url);
+
+        await save_video_metadata(vid_name, vid_id, user.id, vid_url, video_embedding);
 
         setFiles(newFile)
     }
